@@ -1,109 +1,185 @@
-import React, { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { motion } from "framer-motion";
-
-const BingoApp = () => {
-  const [numbers, setNumbers] = useState<number[]>([]);
-  const [drawnNumbers, setDrawnNumbers] = useState<number[]>([]);
-  const [currentNumber, setCurrentNumber] = useState<number | null>(null);
-  const [isRolling, setIsRolling] = useState(false);
-  const [isCheckTime, setIsCheckTime] = useState(false);
-
-  useEffect(() => {
-    let allNumbers = Array.from({ length: 75 }, (_, i) => i + 1);
-    setNumbers(allNumbers);
-  }, []);
-
-  const drawNumber = () => {
-    if (numbers.length === 0 || isRolling || isCheckTime) return;
-    
-    setIsRolling(true);
-    let rollCount = 0;
-    const rollInterval = setInterval(() => {
-      const tempNumber = numbers[Math.floor(Math.random() * numbers.length)];
-      setCurrentNumber(tempNumber);
-      rollCount++;
-      if (rollCount >= 15) { // 15回（約3秒間）回転する
-        clearInterval(rollInterval);
-        const randomIndex = Math.floor(Math.random() * numbers.length);
-        const newNumber = numbers[randomIndex];
-        setDrawnNumbers((prev) => [...prev, newNumber]);
-        setNumbers((prev) => prev.filter((n) => n !== newNumber));
-        setCurrentNumber(newNumber);
-        setIsRolling(false);
-        
-        if ((drawnNumbers.length + 1) % 10 === 0) {
-          setTimeout(() => setIsCheckTime(true), 1000); // 1秒後にチェックタイムへ
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BINGO VERSION by STORES</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background: linear-gradient(to right, #FFDDC1, #FFC0CB, #FFB6C1);
+            color: white;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding-top: 180px; justify-content: center;
         }
-      }
-    }, 200); // 200msごとに数字を変更（3秒で15回）
-  };
-
-  const resumeGame = () => {
-    setIsCheckTime(false);
-  };
-
-  return (
-    <div className="flex flex-col items-center justify-between min-h-screen bg-gradient-to-r from-yellow-300 via-red-400 to-pink-300 bg-[url('/party-confetti.svg')] bg-cover p-4 text-center">
-      {isCheckTime ? (
-        <div className="flex flex-col items-center justify-center w-full h-screen bg-white text-black p-8">
-          <h1 className="text-6xl font-bold mb-6">🔍 チェックタイム 🔍</h1>
-          <div className="flex flex-wrap justify-center gap-6 text-6xl font-extrabold">
-            {drawnNumbers.map((num) => (
-              <div key={num} className="p-6 bg-yellow-400 rounded-full w-32 h-32 flex items-center justify-center shadow-lg">
-                {num}
-              </div>
-            ))}
-          </div>
-          <Button className="mt-6 text-3xl p-6 bg-green-600 text-white rounded-full shadow-lg hover:bg-green-800 transition" onClick={resumeGame}>
-            続ける
-          </Button>
-        </div>
-      ) : (
-        <>
-          <motion.div
-            className="text-center text-7xl font-bold bg-white w-full p-8 shadow-lg"
-            animate={{ scale: [1, 1.5, 1] }}
-            transition={{ duration: 0.5 }}
-          >
-            <div>BINGO</div>
-            <div className="text-4xl mt-2">VERSION by STORES</div>
-          </motion.div>
-          <motion.div
-            className={`mt-6 text-9xl font-extrabold p-6 rounded-3xl shadow-2xl ${isRolling ? 'bg-gray-200 text-black' : 'bg-black text-white'}`}
-            key={currentNumber}
-            animate={isRolling ? {} : { scale: [1, 2, 1] }}
-            transition={{ duration: 0.7 }}
-          >
-            {currentNumber !== null ? currentNumber : "?"}
-          </motion.div>
-          <div className="mt-6 w-full max-w-5xl">
-            <Card className="bg-white p-6 rounded-3xl shadow-lg">
-              <CardContent className="flex flex-wrap justify-center gap-4 text-4xl font-bold">
-                {drawnNumbers.map((num) => (
-                  <motion.div
-                    key={num}
-                    className="p-4 bg-yellow-400 rounded-full w-20 h-20 flex items-center justify-center shadow-lg text-black"
-                    animate={{ scale: [0.5, 1.5, 1] }}
-                    transition={{ duration: 0.5 }}
-                  >
-                    {num}
-                  </motion.div>
-                ))}
-              </CardContent>
-            </Card>
-          </div>
-          <Button
-            className="mt-6 text-2xl p-6 bg-purple-500 text-white rounded-full shadow-lg hover:bg-purple-700 transition"
-            onClick={drawNumber}
-          >
-            抽選する！
-          </Button>
-        </>
-      )}
+        .title {
+            font-size: 5rem;
+            font-weight: bold;
+            background: white;
+            color: black;
+            padding: 20px;
+            width: 100%;
+            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
+            position: fixed;
+            top: 20px;
+            left: 0;
+            text-align: center;
+        }
+        .subtitle {
+            font-size: 1.5rem;
+            font-weight: normal;
+        }
+        .number-display {
+            font-size: 9rem;
+            font-weight: bold;
+            background: black;
+            color: white;
+            padding: 40px;
+            border-radius: 20px;
+            margin-top: -120px;
+            transition: transform 0.5s ease;
+        }
+        .rolling {
+            background: #E0E0E0 !important;
+            color: #444 !important;
+        }
+        .pop-out {
+            transform: scale(1.5);
+        }
+        .button {
+            font-size: 1.2rem;
+            padding: 10px 20px;
+            background: #FF6F61;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            position: absolute;
+            bottom: 20px;
+        }
+        .button:hover {
+            background: #D84315;
+        }
+        .drawn-numbers-container {
+            padding: 20px;
+            margin-top: 20px;
+        }
+        .drawn-numbers {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 10px;
+        }
+        .drawn-number {
+            font-size: 2rem;
+            font-weight: bold;
+            background: yellow;
+            color: black;
+            width: 80px;
+            height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.2);
+        }
+        .check-time {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: white;
+            color: black;
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            font-size: 8rem;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="title">BINGO <br><span class="subtitle">VERSION by STORES</span></div>
+    <div class="number-display" id="currentNumber">?</div>
+    <button class="button" onclick="drawNumber()">抽選する！</button>
+    <div class="drawn-numbers-container">
+        <div class="drawn-numbers" id="drawnNumbers"></div>
     </div>
-  );
-};
+    
+    <div class="check-time" id="checkTime">
+        <div>🔍 チェックタイム 🔍</div>
+        <div id="checkNumbers" class="drawn-numbers"></div>
+        <button class="button" onclick="resumeGame()">続ける</button>
+    </div>
+    
+    <script>
+        let numbers = Array.from({ length: 75 }, (_, i) => i + 1);
+        let drawnNumbers = [];
+        let isRolling = false;
 
-export default BingoApp;
+        function drawNumber() {
+            if (numbers.length === 0 || isRolling) return;
+            
+            isRolling = true;
+            let numberDisplay = document.getElementById("currentNumber");
+            numberDisplay.classList.add("rolling");
+            let rollCount = 0;
+            let interval = setInterval(() => {
+                let randomIndex = Math.floor(Math.random() * numbers.length);
+                numberDisplay.textContent = numbers[randomIndex];
+                rollCount++;
+                if (rollCount >= 15) {
+                    clearInterval(interval);
+                    let newNumber = numbers[randomIndex];
+                    drawnNumbers.push(newNumber);
+                    numbers.splice(randomIndex, 1);
+                    numberDisplay.textContent = newNumber;
+                    numberDisplay.classList.remove("rolling");
+                    numberDisplay.classList.add("pop-out");
+                    setTimeout(() => numberDisplay.classList.remove("pop-out"), 500);
+                    updateDrawnNumbers();
+                    isRolling = false;
+                    
+                    if (drawnNumbers.length % 10 === 0) {
+                        showCheckTime();
+                    }
+                }
+            }, 200);
+        }
+
+        function updateDrawnNumbers() {
+            let container = document.getElementById("drawnNumbers");
+            container.innerHTML = "";
+            drawnNumbers.forEach(num => {
+                let div = document.createElement("div");
+                div.classList.add("drawn-number");
+                div.textContent = num;
+                container.appendChild(div);
+            });
+        }
+
+        function showCheckTime() {
+            document.getElementById("checkTime").style.display = "flex";
+            let checkContainer = document.getElementById("checkNumbers");
+            checkContainer.innerHTML = "";
+            drawnNumbers.forEach(num => {
+                let div = document.createElement("div");
+                div.classList.add("drawn-number");
+                div.textContent = num;
+                checkContainer.appendChild(div);
+            });
+        }
+
+        function resumeGame() {
+            document.getElementById("checkTime").style.display = "none";
+        }
+    </script>
+</body>
+</html>
