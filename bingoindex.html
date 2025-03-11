@@ -1,0 +1,109 @@
+import React, { useState, useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { motion } from "framer-motion";
+
+const BingoApp = () => {
+  const [numbers, setNumbers] = useState<number[]>([]);
+  const [drawnNumbers, setDrawnNumbers] = useState<number[]>([]);
+  const [currentNumber, setCurrentNumber] = useState<number | null>(null);
+  const [isRolling, setIsRolling] = useState(false);
+  const [isCheckTime, setIsCheckTime] = useState(false);
+
+  useEffect(() => {
+    let allNumbers = Array.from({ length: 75 }, (_, i) => i + 1);
+    setNumbers(allNumbers);
+  }, []);
+
+  const drawNumber = () => {
+    if (numbers.length === 0 || isRolling || isCheckTime) return;
+    
+    setIsRolling(true);
+    let rollCount = 0;
+    const rollInterval = setInterval(() => {
+      const tempNumber = numbers[Math.floor(Math.random() * numbers.length)];
+      setCurrentNumber(tempNumber);
+      rollCount++;
+      if (rollCount >= 15) { // 15回（約3秒間）回転する
+        clearInterval(rollInterval);
+        const randomIndex = Math.floor(Math.random() * numbers.length);
+        const newNumber = numbers[randomIndex];
+        setDrawnNumbers((prev) => [...prev, newNumber]);
+        setNumbers((prev) => prev.filter((n) => n !== newNumber));
+        setCurrentNumber(newNumber);
+        setIsRolling(false);
+        
+        if ((drawnNumbers.length + 1) % 10 === 0) {
+          setTimeout(() => setIsCheckTime(true), 1000); // 1秒後にチェックタイムへ
+        }
+      }
+    }, 200); // 200msごとに数字を変更（3秒で15回）
+  };
+
+  const resumeGame = () => {
+    setIsCheckTime(false);
+  };
+
+  return (
+    <div className="flex flex-col items-center justify-between min-h-screen bg-gradient-to-r from-yellow-300 via-red-400 to-pink-300 bg-[url('/party-confetti.svg')] bg-cover p-4 text-center">
+      {isCheckTime ? (
+        <div className="flex flex-col items-center justify-center w-full h-screen bg-white text-black p-8">
+          <h1 className="text-6xl font-bold mb-6">🔍 チェックタイム 🔍</h1>
+          <div className="flex flex-wrap justify-center gap-6 text-6xl font-extrabold">
+            {drawnNumbers.map((num) => (
+              <div key={num} className="p-6 bg-yellow-400 rounded-full w-32 h-32 flex items-center justify-center shadow-lg">
+                {num}
+              </div>
+            ))}
+          </div>
+          <Button className="mt-6 text-3xl p-6 bg-green-600 text-white rounded-full shadow-lg hover:bg-green-800 transition" onClick={resumeGame}>
+            続ける
+          </Button>
+        </div>
+      ) : (
+        <>
+          <motion.div
+            className="text-center text-7xl font-bold bg-white w-full p-8 shadow-lg"
+            animate={{ scale: [1, 1.5, 1] }}
+            transition={{ duration: 0.5 }}
+          >
+            <div>BINGO</div>
+            <div className="text-4xl mt-2">VERSION by STORES</div>
+          </motion.div>
+          <motion.div
+            className={`mt-6 text-9xl font-extrabold p-6 rounded-3xl shadow-2xl ${isRolling ? 'bg-gray-200 text-black' : 'bg-black text-white'}`}
+            key={currentNumber}
+            animate={isRolling ? {} : { scale: [1, 2, 1] }}
+            transition={{ duration: 0.7 }}
+          >
+            {currentNumber !== null ? currentNumber : "?"}
+          </motion.div>
+          <div className="mt-6 w-full max-w-5xl">
+            <Card className="bg-white p-6 rounded-3xl shadow-lg">
+              <CardContent className="flex flex-wrap justify-center gap-4 text-4xl font-bold">
+                {drawnNumbers.map((num) => (
+                  <motion.div
+                    key={num}
+                    className="p-4 bg-yellow-400 rounded-full w-20 h-20 flex items-center justify-center shadow-lg text-black"
+                    animate={{ scale: [0.5, 1.5, 1] }}
+                    transition={{ duration: 0.5 }}
+                  >
+                    {num}
+                  </motion.div>
+                ))}
+              </CardContent>
+            </Card>
+          </div>
+          <Button
+            className="mt-6 text-2xl p-6 bg-purple-500 text-white rounded-full shadow-lg hover:bg-purple-700 transition"
+            onClick={drawNumber}
+          >
+            抽選する！
+          </Button>
+        </>
+      )}
+    </div>
+  );
+};
+
+export default BingoApp;
