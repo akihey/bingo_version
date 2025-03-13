@@ -14,34 +14,47 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            padding-top: 180px; justify-content: center;
+            justify-content: center;
+            padding-top: 100px;
         }
         .title {
             font-size: 5rem;
             font-weight: bold;
             background: white;
             color: black;
-            padding: 20px;
+            padding: 15px;
             width: 100%;
             box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
             position: fixed;
-            top: 20px;
+            top: 10px;
             left: 0;
             text-align: center;
         }
         .subtitle {
-            font-size: 1.5rem;
+            font-size: 1.8rem;
             font-weight: normal;
+            display: block;
+            margin-top: 5px;
+        }
+        .main-container {
+            display: flex;
+            width: 90%;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 80px;
         }
         .number-display {
-            font-size: 9rem;
-            font-weight: bold;
-            background: black;
-            color: white;
-            padding: 40px;
-            border-radius: 20px;
-            margin-top: -120px;
-            transition: transform 0.5s ease;
+    font-size: 15rem; /* 数字をさらに大きく */
+    font-weight: bold;
+    background: black;
+    color: white;
+    padding: 80px; /* 余白を増やして見やすく */
+    border-radius: 30px;
+    transition: transform 0.5s ease;
+    flex: 1;
+    min-width: 300px; /* 最小幅を広げる */
+    text-align: center;
+
         }
         .rolling {
             background: #E0E0E0 !important;
@@ -50,33 +63,23 @@
         .pop-out {
             transform: scale(1.5);
         }
-        .button {
-            font-size: 1.2rem;
-            padding: 10px 20px;
-            background: #FF6F61;
-            color: white;
-            border: none;
-            border-radius: 10px;
-            cursor: pointer;
-            position: absolute;
-            bottom: 20px;
-        }
-        .button:hover {
-            background: #D84315;
-        }
         .drawn-numbers-container {
-            padding: 20px;
-            margin-top: 20px;
+            flex: 2;
+            padding: 30px;
+            background: white;
+            color: black;
+            border-radius: 30px;
+            box-shadow: 0px 6px 15px rgba(0, 0, 0, 0.2);
         }
         .drawn-numbers {
             display: flex;
             flex-wrap: wrap;
             justify-content: center;
             gap: 15px;
-            margin-top: 10px;
+            margin-top: 20px;
         }
         .drawn-number {
-            font-size: 2rem;
+            font-size: 3rem;
             font-weight: bold;
             background: yellow;
             color: black;
@@ -86,39 +89,39 @@
             align-items: center;
             justify-content: center;
             border-radius: 50%;
-            box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.2);
+            box-shadow: 3px 3px 8px rgba(0, 0, 0, 0.3);
         }
-        .check-time {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: white;
-            color: black;
-            display: none;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            font-size: 8rem;
-            font-weight: bold;
+        .button {
+            font-size: 1.8rem;
+            padding: 15px 30px;
+            background: #FF6F61;
+            color: white;
+            border: none;
+            border-radius: 15px;
+            cursor: pointer;
+            margin-top: 30px;
+        }
+        .button:hover {
+            background: #D84315;
         }
     </style>
 </head>
 <body>
-    <div class="title">BINGO <br><span class="subtitle">VERSION by STORES</span></div>
-    <div class="number-display" id="currentNumber">?</div>
-    <button class="button" onclick="drawNumber()">抽選する！</button>
-    <div class="drawn-numbers-container">
-        <div class="drawn-numbers" id="drawnNumbers"></div>
+    <div class="title">
+        BINGO <br><span class="subtitle">VERSION by STORES</span>
     </div>
-    
-    <div class="check-time" id="checkTime">
-        <div>🔍 チェックタイム 🔍</div>
-        <div id="checkNumbers" class="drawn-numbers"></div>
-        <button class="button" onclick="resumeGame()">続ける</button>
-    </div>
-    
+
+    <div class="main-container">
+      <div class="left-container">
+          <div class="number-display" id="currentNumber">?</div>
+          <button class="button" onclick="drawNumber()">抽選する！</button>
+      </div>
+      <div class="drawn-numbers-container">
+          <h2 style="font-size: 2rem;">出た番号</h2>
+          <div class="drawn-numbers" id="drawnNumbers"></div>
+      </div>
+  </div>
+
     <script>
         let numbers = Array.from({ length: 75 }, (_, i) => i + 1);
         let drawnNumbers = [];
@@ -130,6 +133,7 @@
             isRolling = true;
             let numberDisplay = document.getElementById("currentNumber");
             numberDisplay.classList.add("rolling");
+
             let rollCount = 0;
             let interval = setInterval(() => {
                 let randomIndex = Math.floor(Math.random() * numbers.length);
@@ -146,10 +150,6 @@
                     setTimeout(() => numberDisplay.classList.remove("pop-out"), 500);
                     updateDrawnNumbers();
                     isRolling = false;
-                    
-                    if (drawnNumbers.length % 10 === 0) {
-                        showCheckTime();
-                    }
                 }
             }, 200);
         }
@@ -163,22 +163,6 @@
                 div.textContent = num;
                 container.appendChild(div);
             });
-        }
-
-        function showCheckTime() {
-            document.getElementById("checkTime").style.display = "flex";
-            let checkContainer = document.getElementById("checkNumbers");
-            checkContainer.innerHTML = "";
-            drawnNumbers.forEach(num => {
-                let div = document.createElement("div");
-                div.classList.add("drawn-number");
-                div.textContent = num;
-                checkContainer.appendChild(div);
-            });
-        }
-
-        function resumeGame() {
-            document.getElementById("checkTime").style.display = "none";
         }
     </script>
 </body>
